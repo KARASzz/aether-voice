@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="drag-region">
+    <!-- 悬停可见的极简关闭退出按钮 -->
+    <button id="close-btn" class="close-btn" title="退出程序">×</button>
+
+    <!-- 核心悬浮语音球 -->
+    <div id="orb-button" class="orb state-idle" title="单击开启对讲 / 再次单击挂断 | 右键打开菜单">
+      <div class="orb-inner"></div>
+      <div class="orb-wave"></div>
+      <div class="orb-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 状态与异常提示小气泡 -->
+    <div id="tooltip" class="tooltip"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

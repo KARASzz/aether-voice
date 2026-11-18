@@ -1,0 +1,26 @@
+{
+  "name": "voice-assistant-desktop",
+  "version": "1.0.0",
+  "description": "极简独立办公任务语音助理（Windows & macOS 免安装版）",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.js",
+    "build:mac": "electron-builder --mac dir --config electron-builder.yml",
+    "build:win": "electron-builder --win portable --config electron-builder.yml"
+  },
+  "keywords": [
+    "voice-assistant",
+    "azure-realtime",
+    "electron"
+  ],
+  "author": "karas",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

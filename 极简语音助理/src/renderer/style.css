@@ -1,0 +1,222 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+  padding: 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 极简关闭按钮：平时隐藏，鼠标悬停时轻盈显现 */
+.close-btn {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+  font-size: 14px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-region:hover .close-btn {
+  opacity: 0.9;
+  transform: scale(1);
+}
+
+.close-btn:hover {
+  opacity: 1;
+  background: #dc2626;
+  transform: scale(1.15);
+}
+
+.orb {
+  -webkit-app-region: no-drag;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.orb:active {
+  transform: scale(0.92);
+}
+
+.orb-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  filter: blur(2px);
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+.orb-wave {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.orb-icon {
+  position: relative;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.orb-icon svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+/* 1. 待命状态 (Idle) */
+.state-idle .orb-inner {
+  background: radial-gradient(circle at 35% 35%, #4a5568 0%, #1a202c 70%, #0d1117 100%);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+.state-idle:hover .orb-inner {
+  box-shadow: 0 6px 22px rgba(100, 116, 139, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.35);
+}
+
+/* 2. 正在连接 (Connecting) */
+.state-connecting .orb-inner {
+  background: radial-gradient(circle at 35% 35%, #06b6d4 0%, #0284c7 70%, #0369a1 100%);
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.8);
+  animation: pulse-quick 0.8s infinite alternate ease-in-out;
+}
+
+/* 3. 已连线 / 聆听对讲中 (Connected & Listening) */
+.state-connected .orb-inner {
+  background: radial-gradient(circle at 30% 30%, #a855f7 0%, #ec4899 60%, #3b82f6 100%);
+  box-shadow: 0 0 30px rgba(236, 72, 153, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.4);
+  animation: breathe 2s infinite ease-in-out;
+}
+.state-connected .orb-wave {
+  border: 2px solid rgba(168, 85, 247, 0.6);
+  animation: ripple 2s infinite cubic-bezier(0, 0.2, 0.8, 1);
+}
+
+/* 4. 网络搜索中 (Searching) */
+.state-searching .orb-inner {
+  background: radial-gradient(circle at 35% 35%, #fbbf24 0%, #f59e0b 60%, #b45309 100%);
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.9);
+  animation: spin-pulse 1.2s infinite linear;
+}
+
+/* 5. 异常 / 未配置 (Error) */
+.state-error .orb-inner {
+  background: radial-gradient(circle at 35% 35%, #f87171 0%, #ef4444 70%, #991b1b 100%);
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.85);
+  animation: shake 0.4s ease;
+}
+
+/* 提示气泡 */
+.tooltip {
+  position: absolute;
+  bottom: -4px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 20;
+}
+
+.tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 25px rgba(236, 72, 153, 0.6);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.9);
+  }
+}
+
+@keyframes pulse-quick {
+  0% { transform: scale(0.96); opacity: 0.85; }
+  100% { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-pulse {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171b19">
+  <meta name="description" content="个人语音工作台：调用 Cloudflare Workers 进行语音合成与 WAV 转文字。">
+  <title>炼声所 · 个人语音控制台</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-mark" viewBox="0 0 48 48"><path d="M24 4v5m0 30v5M4 24h5m30 0h5M10 10l4 4m20 20 4 4m0-28-4 4M14 34l-4 4"/><circle cx="24" cy="24" r="15"/><circle cx="24" cy="24" r="6"/><path d="m24 9 4 7-4 3-4-3 4-7Zm15 15-7 4-3-4 3-4 7 4ZM24 39l-4-7 4-3 4 3-4 7ZM9 24l7-4 3 4-3 4-7-4Z"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 2 1.9 7.1L21 12l-7.1 1.9L12 21l-1.9-7.1L3 12l7.1-2.9L12 2Z"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v4h16v-4"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 5 12 7-12 7V5Z"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v4h16v-4"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></symbol>
+    <symbol id="icon-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11v1a7 7 0 0 0 14 0v-1m-7 8v3m-4 0h8"/></symbol>
+    <symbol id="icon-wave" viewBox="0 0 100 44"><path d="M2 22h6l4-9 7 20 7-27 8 32 7-26 7 19 7-16 6 9h8l5-19 7 29 7-23 6 11 5-5h5"/></symbol>
+  </svg>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="炼声所首页">
+        <span class="brand-seal"><svg><use href="#icon-mark"/></svg></span>
+        <span class="brand-name"><strong>炼声所</strong><small>AETHER VOICE WORKSHOP</small></span>
+      </a>
+      <div class="topbar-right">
+        <span class="local-badge"><i></i> 本地控制台</span>
+        <button class="icon-button settings-trigger" type="button" aria-label="打开接口设置">
+          <svg><use href="#icon-settings"/></svg><span>接口设置</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>个人语音终端</span><b>序列 01</b></p>
+          <h1 id="hero-title">让文字<span>发声</span><br>让声音<span>留下文字</span></h1>
+          <p class="hero-intro">一间属于你的数字炼声工坊。用自己的 Worker，把想法转成声音，把录音整理成文字。</p>
+          <div class="hero-meta"><span class="meta-rule"></span><span>VOICE IN · VOICE OUT</span><span class="meta-dot">✳</span><span>由你的 Cloudflare Workers 驱动</span></div>
+        </div>
+        <div class="hero-instrument" aria-hidden="true">
+          <div class="instrument-caption"><span>声波压力计</span><span>机芯已待命</span></div>
+          <div class="dial">
+            <div class="dial-ticks"></div><div class="dial-face"><div class="dial-numbers"><span>0</span><span>5</span><span>10</span></div><div class="dial-needle"></div><div class="dial-center"></div><div class="dial-readout">AETHER<br><b>VOICE</b></div></div>
+          </div>
+          <div class="instrument-foot"><span>CHAMBER 01</span><span class="signal-bars"><i></i><i></i><i></i><i></i><i></i></span><span>READY</span></div>
+          <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
+        </div>
+      </section>
+
+      <section class="workshop" aria-label="语音工作台">
+        <div class="workshop-head">
+          <div class="mode-tabs" role="tablist" aria-label="选择语音任务">
+            <button id="tab-tts" class="mode-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-tts" data-mode="tts"><span class="tab-index">01</span><span><strong>文字转语音</strong><small>TEXT TO SPEECH</small></span><span class="tab-mark">↗</span></button>
+            <button id="tab-stt" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-stt" data-mode="stt"><span class="tab-index">02</span><span><strong>语音转文字</strong><small>WAV TRANSCRIPTION</small></span><span class="tab-mark">↗</span></button>
+          </div>
+          <div class="workshop-note"><span class="note-screw"></span> 你的请求直达自有 Worker</div>
+        </div>
+
+        <div id="panel-tts" class="work-area" role="tabpanel" aria-labelledby="tab-tts">
+          <section class="control-panel">
+            <div class="panel-title-row"><div><p class="section-kicker">SYNTHESIS / 01</p><h2>文字，准备好了吗？</h2></div><span class="panel-stamp">TTS</span></div>
+            <form id="ttsForm">
+              <div class="field-heading"><label for="ttsText">输入要说的话</label><span id="charCount">0 / 3000</span></div>
+              <textarea id="ttsText" maxlength="3000" placeholder="在这里写下一段文字……\n\n比如：早上好，欢迎来到我的语音工作台。" required></textarea>
+              <div class="tts-controls">
+                <div class="field-group voice-group"><label for="ttsVoice">音色 ID</label><input id="ttsVoice" type="text" value="zh-CN-XiaoyiNeural" autocomplete="off" spellcheck="false"><div class="voice-suggestions"><button type="button" data-voice="zh-CN-XiaoyiNeural">小艺 · 温柔</button><button type="button" data-voice="zh-CN-XiaoxiaoNeural">晓晓 · 明亮</button><button type="button" data-voice="zh-CN-YunxiNeural">云希 · 清朗</button></div></div>
+                <div class="field-group speed-group"><label for="ttsSpeed">语速 <span class="speed-readout" id="speedValue">1.00×</span></label><input id="ttsSpeed" type="range" min="0.5" max="1.5" step="0.05" value="1"><div class="range-ends"><span>慢</span><span>快</span></div></div>
+              </div>
+              <div class="request-hint"><span class="hint-led"></span><span>Azure 神经语音 · 输出格式由 Worker 决定</span><code id="ttsEndpointHint">… /audio/speech</code></div>
+              <div class="form-actions"><button class="primary-button" type="submit"><svg><use href="#icon-spark"/></svg><span class="button-label">开始炼声</span><span class="button-arrow">→</span></button><span class="action-caption">生成的音频只在此页面暂存</span></div>
+              <p id="ttsStatus" class="inline-status" role="status" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <aside class="output-panel" aria-label="合成结果">
+            <div class="output-topline"><span>输出舱</span><span id="ttsResultBadge" class="result-badge">待命</span></div>
+            <div id="ttsEmpty" class="empty-output"><div class="wave-emblem"><div class="wave-ring ring-a"></div><div class="wave-ring ring-b"></div><div class="wave-core"><svg><use href="#icon-wave"/></svg></div><span class="emblem-dot dot-a"></span><span class="emblem-dot dot-b"></span></div><p class="empty-title">等待第一段声波</p><p class="empty-copy">合成完成后，音频将在这里播放。<br>调好音色，点亮启动按钮。</p><div class="empty-index">NO SIGNAL <i></i> READY</div></div>
+            <div id="ttsResult" class="result-content" hidden><div class="result-icon"><svg><use href="#icon-wave"/></svg></div><p class="result-title">声波已生成</p><p id="ttsResultMeta" class="result-meta">音频已就绪</p><audio id="ttsAudio" controls preload="metadata"></audio><a id="downloadAudio" class="download-link" href="#" download><svg><use href="#icon-download"/></svg>下载音频</a></div>
+            <div class="output-footer"><span>WORKER RESPONSE</span><span id="ttsLatency">—</span></div>
+          </aside>
+        </div>
+
+        <div id="panel-stt" class="work-area" role="tabpanel" aria-labelledby="tab-stt" hidden>
+          <section class="control-panel">
+            <div class="panel-title-row"><div><p class="section-kicker">TRANSCRIPTION / 02</p><h2>把录音放进来</h2></div><span class="panel-stamp">WAV</span></div>
+            <form id="sttForm">
+              <input id="audioFile" type="file" accept=".wav,.wave,.mp3,audio/wav,audio/x-wav,audio/mpeg" hidden>
+              <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="选择或拖放 WAV 或 MP3 音频文件">
+                <div class="upload-symbol"><svg><use href="#icon-upload"/></svg><span>WAV / MP3</span></div>
+                <div class="drop-copy"><strong id="fileTitle">拖一段 WAV 或 MP3 录音到这里</strong><span id="fileSubtitle">或点击选择文件 · MP3 会自动转换为 WAV</span></div>
+                <span class="choose-file">选择文件</span>
+              </div>
+              <div id="selectedFile" class="selected-file" hidden><span class="file-wave">♫</span><span class="file-info"><strong id="selectedName">audio.wav</strong><small id="selectedMeta">WAV 音频</small></span><button id="removeFile" class="remove-file" type="button" aria-label="移除音频">×</button></div>
+              <div class="record-row"><span class="record-caption"><svg><use href="#icon-mic"/></svg><span><strong>现场录音</strong><small>停止后自动转为 16 kHz 单声道 WAV</small></span></span><button id="recordButton" class="record-button" type="button"><i></i><span>开始录音</span></button><span id="recordTimer" class="record-timer" hidden>00:00</span></div>
+              <audio id="sourcePreview" class="source-preview" controls hidden></audio>
+              <div class="request-hint"><span class="hint-led"></span><span>Azure 短语音识别</span><span class="hint-spacer"></span><span>识别语言</span><code>zh-CN</code></div>
+              <div class="form-actions"><button id="transcribeButton" class="primary-button" type="submit" disabled><svg><use href="#icon-spark"/></svg><span class="button-label">开始转写</span><span class="button-arrow">→</span></button><span class="action-caption">WAV 将发送至你配置的识别 Worker</span></div>
+              <p id="sttStatus" class="inline-status" role="status" aria-live="polite"></p>
+            </form>
+          </section>
+          <aside class="output-panel transcript-panel" aria-label="识别结果">
+            <div class="output-topline"><span>转写稿</span><span id="sttResultBadge" class="result-badge">待命</span></div>
+            <div id="sttEmpty" class="empty-output"><div class="transcript-glyph"><span>声</span><i></i><i></i><i></i><i></i><i></i><i></i></div><p class="empty-title">这里将出现你的文字</p><p class="empty-copy">上传 WAV、MP3 或现场录音，<br>识别结果会显示在这里。</p><div class="empty-index">TRANSCRIPTION <i></i> READY</div></div>
+            <div id="sttResult" class="transcript-result" hidden><div class="transcript-paper"><div class="paper-mark">识别文本 <span>ZH-CN</span></div><p id="transcriptText"></p></div><button id="copyTranscript" class="copy-button" type="button"><svg><use href="#icon-copy"/></svg>复制转写稿</button></div>
+            <div class="output-footer"><span>WORKER RESPONSE</span><span id="sttLatency">—</span></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>炼声所 <b>·</b> 个人语音控制台</span><span class="footer-center"><i></i> 音频与文本仅在你点击操作时发送</span><span>BUILT FOR YOUR VOICE</span></footer>
+  </div>
+
+  <dialog id="configDialog" class="config-dialog" aria-labelledby="configTitle">
+    <form id="configForm" method="dialog">
+      <div class="dialog-header"><div><p class="section-kicker">CONNECTIONS / CONFIG</p><h2 id="configTitle">接口设置</h2></div><button class="dialog-close" type="button" aria-label="关闭设置">×</button></div>
+      <p class="dialog-intro">本地项目已内置你的自用口令，两个接口共用。若把控制台部署成公开网页，访问者可以读取前端代码中的口令。</p>
+      <section class="config-section"><div class="config-section-title"><span class="config-number">01</span><div><h3>语音合成 · TTS</h3><p>兼容 OpenAI Audio Speech</p></div></div>
+        <label class="config-field"><span>Server URL</span><input id="ttsBaseUrl" type="url" spellcheck="false" required></label>
+        <div class="config-split"><label class="config-field"><span>Endpoint</span><input id="ttsPath" type="text" spellcheck="false" required></label><label class="config-field"><span>Backend</span><input value="Azure Speech · Neural TTS" type="text" disabled></label></div>
+        <div class="config-split"><label class="config-field"><span>API Key</span><input id="ttsKey" type="password" autocomplete="off" placeholder="已内置本地口令"></label><label class="config-field"><span>认证方式</span><input value="Authorization · Bearer" type="text" disabled></label></div>
+      </section>
+      <section class="config-section"><div class="config-section-title"><span class="config-number">02</span><div><h3>语音识别 · STT</h3><p>WAV · multipart/form-data</p></div></div>
+        <label class="config-field"><span>Server URL</span><input id="sttBaseUrl" type="url" spellcheck="false" required></label>
+        <div class="config-split"><label class="config-field"><span>Endpoint</span><input id="sttPath" type="text" spellcheck="false" required></label><label class="config-field"><span>Backend</span><input value="Azure Speech · Short Audio" type="text" disabled></label></div>
+        <div class="config-split"><label class="config-field"><span>API Key</span><input id="sttKey" type="password" autocomplete="off" placeholder="已内置本地口令"></label><label class="config-field"><span>Language</span><input id="sttLanguage" type="text" required></label></div>
+      </section>
+      <p class="cors-note"><b>连接提示</b> 若请求报跨域错误，请确认 Worker 允许此页面来源，并支持 OPTIONS、Authorization 与对应的请求方法。</p>
+      <div class="dialog-actions"><button class="text-button dialog-cancel" type="button">取消</button><button class="save-button" type="submit">保存接口设置 <span>→</span></button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
