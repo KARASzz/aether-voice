@@ -92,9 +92,7 @@ class RealtimeSession {
     this.ws.on('open', () => {
       this.isConnected = true;
       this.onStateChange('connected', '语音连线成功，随时可以开口说话');
-      if (this.connectionType !== 'agent') {
-        this.initSession(az.voice || 'shimmer');
-      }
+      this.initSession(az.voice || 'shimmer');
     });
 
     this.ws.on('message', async (raw) => {
@@ -124,75 +122,79 @@ class RealtimeSession {
   }
 
   initSession(voice) {
-    // 智能适配 Azure 语音对象与 OpenAI 原生语音
-    let voicePayload = voice;
-    if (typeof voice === 'string') {
-      if (voice.includes('Neural') || voice.includes('Multilingual') || voice.startsWith('zh-') || voice.startsWith('en-')) {
-        voicePayload = {
-          name: voice,
-          type: 'azure-standard'
-        };
-      } else {
-        voicePayload = {
-          name: voice,
-          type: 'openai'
-        };
-      }
-    }
+    const isAgent = this.connectionType === 'agent';
 
-    const sessionUpdate = {
-      type: 'session.update',
-      session: {
-        modalities: ['audio', 'text'],
-        instructions: getPersonaPrompt(),
-        voice: voicePayload,
-        input_audio_format: 'pcm16',
-        output_audio_format: 'pcm16',
-        input_audio_transcription: {
-          model: 'whisper-1'
-        },
-        turn_detection: {
-          type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 600
-        },
-        tools: [
-          {
-            type: 'function',
-            name: 'search_web',
-            description: '当用户询问实时事实、新闻时政、技术文档、最新资料或需要网络检索时调用',
-            parameters: {
-              type: 'object',
-              properties: {
-                query: { type: 'string', description: '精准搜索关键词' }
-              },
-              required: ['query']
+    const tools = [
+      {
+        type: 'function',
+        name: 'search_web',
+        description: '当用户询问实时天气、温度预报、时政新闻、最新事实、技术文档、资料或需要网络检索时必须调用此工具',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '精准搜索关键词，例如北京今天天气' }
+          },
+          required: ['query']
+        }
+      },
+      {
+        type: 'function',
+        name: 'switch_persona',
+        description: '当用户通过语音对你提出任何人设、角色、语气、性格或任务要求（如“换成...角色”、“扮演...”、“变成...”、“做我的...”、“恢复默认”）时调用',
+        parameters: {
+          type: 'object',
+          properties: {
+            instruction: {
+              type: 'string',
+              description: '用户要求扮演的角色、性格风格或人设指令详情'
             }
           },
-          {
-            type: 'function',
-            name: 'switch_persona',
-            description: '当用户通过语音对你提出任何人设、角色、语气、性格或任务要求（如“换成...角色”、“扮演...”、“变成...”、“做我的...”、“恢复默认”）时调用',
-            parameters: {
-              type: 'object',
-              properties: {
-                instruction: {
-                  type: 'string',
-                  description: '用户要求扮演的角色、性格风格或人设指令详情'
-                }
-              },
-              required: ['instruction']
-            }
-          }
-        ]
+          required: ['instruction']
+        }
       }
+    ];
+
+    const sessionPayload = {
+      type: 'realtime',
+      instructions: getPersonaPrompt(),
+      tools: tools,
+      tool_choice: 'auto'
     };
-    this.send(sessionUpdate);
+
+    if (!isAgent) {
+      let voicePayload = voice;
+      if (typeof voice === 'string') {
+        if (voice.includes('Neural') || voice.includes('Multilingual') || voice.startsWith('zh-') || voice.startsWith('en-')) {
+          voicePayload = { name: voice, type: 'azure-standard' };
+        } else {
+          voicePayload = { name: voice, type: 'openai' };
+        }
+      }
+      sessionPayload.voice = voicePayload;
+      sessionPayload.modalities = ['audio', 'text'];
+      sessionPayload.input_audio_format = 'pcm16';
+      sessionPayload.output_audio_format = 'pcm16';
+      sessionPayload.input_audio_transcription = { model: 'whisper-1' };
+      sessionPayload.turn_detection = {
+        type: 'server_vad',
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 600
+      };
+    }
+
+    this.send({
+      type: 'session.update',
+      session: sessionPayload
+    });
   }
 
   async handleServerEvent(event) {
     switch (event.type) {
+      case 'session.created':
+        this.initSession();
+        break;
+
       case 'response.audio.delta':
       case 'response.output_audio.delta':
         if (event.delta) {
@@ -231,7 +233,8 @@ class RealtimeSession {
   }
 
   async handleFunctionCall(event) {
-    const { name, call_id, arguments: argsJson } = event;
+    const { name, arguments: argsJson } = event;
+    const call_id = event.call_id || event.item_id;
     let args = {};
     try {
       args = JSON.parse(argsJson);
@@ -251,6 +254,7 @@ class RealtimeSession {
       this.send({
         type: 'session.update',
         session: {
+          type: 'realtime',
           instructions: getPersonaPrompt()
         }
       });
