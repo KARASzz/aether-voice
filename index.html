@@ -124,18 +124,19 @@
       <section class="config-section"><div class="config-section-title"><span class="config-number">01</span><div><h3>语音合成 · TTS</h3><p>兼容 OpenAI Audio Speech</p></div></div>
         <label class="config-field"><span>Server URL</span><input id="ttsBaseUrl" type="url" spellcheck="false" required></label>
         <div class="config-split"><label class="config-field"><span>Endpoint</span><input id="ttsPath" type="text" spellcheck="false" required></label><label class="config-field"><span>Backend</span><input value="Azure Speech · Neural TTS" type="text" disabled></label></div>
-        <div class="config-split"><label class="config-field"><span>API Key</span><input id="ttsKey" type="password" autocomplete="off" placeholder="已内置本地口令"></label><label class="config-field"><span>认证方式</span><input value="Authorization · Bearer" type="text" disabled></label></div>
+        <div class="config-split"><label class="config-field"><span>API Key</span><input id="ttsKey" type="password" autocomplete="off" placeholder="请输入 API Key"></label><label class="config-field"><span>认证方式</span><input value="Authorization · Bearer" type="text" disabled></label></div>
       </section>
       <section class="config-section"><div class="config-section-title"><span class="config-number">02</span><div><h3>语音识别 · STT</h3><p>WAV · multipart/form-data</p></div></div>
         <label class="config-field"><span>Server URL</span><input id="sttBaseUrl" type="url" spellcheck="false" required></label>
         <div class="config-split"><label class="config-field"><span>Endpoint</span><input id="sttPath" type="text" spellcheck="false" required></label><label class="config-field"><span>Backend</span><input value="Azure Speech · Short Audio" type="text" disabled></label></div>
-        <div class="config-split"><label class="config-field"><span>API Key</span><input id="sttKey" type="password" autocomplete="off" placeholder="已内置本地口令"></label><label class="config-field"><span>Language</span><input id="sttLanguage" type="text" required></label></div>
+        <div class="config-split"><label class="config-field"><span>API Key</span><input id="sttKey" type="password" autocomplete="off" placeholder="请输入 API Key"></label><label class="config-field"><span>Language</span><input id="sttLanguage" type="text" required></label></div>
       </section>
       <p class="cors-note"><b>连接提示</b> 若请求报跨域错误，请确认 Worker 允许此页面来源，并支持 OPTIONS、Authorization 与对应的请求方法。</p>
       <div class="dialog-actions"><button class="text-button dialog-cancel" type="button">取消</button><button class="save-button" type="submit">保存接口设置 <span>→</span></button></div>
     </form>
   </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/local-config.js"></script>
   <script src="app.js" defer></script>
 </body>
 </html>

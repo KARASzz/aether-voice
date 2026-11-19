@@ -1,5 +1,5 @@
 (() => {
-  const BUILT_IN_API_KEY = '';
+  const BUILT_IN_API_KEY = window.AETHER_API_KEY || '';
   const DEFAULTS = {
     ttsBaseUrl: 'https://edge-tts-weathered-math-d184.zyhmoonzy.workers.dev/v1',
     ttsPath: '/audio/speech',
